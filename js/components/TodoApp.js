@@ -35,6 +35,15 @@ class TodoApp extends React.Component {
       ));
   }
 
+  handleLoadMore = () => {
+    // read current params
+    var limit = this.props.relay.variables.limit;
+    // update params
+    this.props.relay.setVariables({
+      limit: limit + 3,
+    });
+  }
+
   makeHeader() {
     return (
       <header className="header">
@@ -50,9 +59,9 @@ class TodoApp extends React.Component {
 
   makeList() {
     const todos = this.props.viewer.todos.edges;
+    const total = this.props.viewer.todos.count;
     if (todos.length > 0) {
       const undone = todos.filter((edge) => !edge.node.complete).length;
-      const total = todos.length;
       const filters = ['all', 'active', 'completed'].map((filter) => {
         const selected = filter === this.state.selectedFilter;
         return (
@@ -103,6 +112,7 @@ class TodoApp extends React.Component {
           {this.makeList()}
         </section>
         <footer className="info">
+          <button onClick={this.handleLoadMore} style={{border: '1px solid red'}}>LOAD MORE</button>
           <p>Double-click to edit a todo</p>
           <p>
             Created by the <a target="_blank" href="https://risingstack.com">RisingStack team</a>
@@ -120,10 +130,8 @@ class TodoApp extends React.Component {
 }
 
 export default Relay.createContainer(TodoApp, {
-  prepareVariables() {
-    return {
-      limit: Number.MAX_SAFE_INTEGER
-    };
+  initialVariables: {
+    limit: 3
   },
 
   fragments: {
@@ -131,6 +139,7 @@ export default Relay.createContainer(TodoApp, {
       fragment on Viewer {
         __typename
         todos(first: $limit) {
+          count,
           edges {
             node {
               id
